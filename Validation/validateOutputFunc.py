@@ -15,17 +15,12 @@ def validateOutputFunc(par,electrodogram,sourceFileName):
         # First load the validation file if it exists
         validationFileName = electrodogram[:electrodogram.rfind('_elGramOutput')]+'.mat' # grab validation file name based on beginning of input file name        
         try:
-            defaultData = loadmat('Validation/'+validationFileName)
-            
-            
-            assert defaultData['elData'].shape == electrodogram.shape,'Electrodogram shape does not match validation file. Expected: '+f"{defaultData['elData'].shape}"+', found '+f'{electrodogram.shape}'
-            assert defaultData['elData'].shape == electrodogram.shape,'Electrodogram shape does not match validation file. Expected: '+f"{defaultData['elData'].shape}"+', found '+f'{electrodogram.shape}'
-            
+            defaultData = loadmat('Validation/'+validationFileName)            
         except Exception as Err:
             if type(Err) == FileNotFoundError:
                 if par['skipValidation']:
                     defaultData['elData'] = electrodogram  # if data flag for skipping validation files is set load an empty matrix (useful for processing non-official/unvalidated inputs)
-                    warnings.warn('No Validation file found! Validation process will be skipped, results may not be accepted for final entry submission!!')
+                    warnings.warn('No Validation file found! Matrix similarity validations will be skipped, results may not be accepted for final entry submission!!')
                 else:
                     raise FileNotFoundError('Could not find validation file for '+sourceFileName[sourceFileName.rfind('/')+1:]+'. Expected to find '+'Validation/'+validationFileName)
             else:
@@ -90,6 +85,9 @@ def validateOutputFunc(par,electrodogram,sourceFileName):
             
         else:
             raise ValueError('Invalid File format: Only .npy, scipy sparse .npz, .h5, or .mat files are allowed')
+            
+            
+            
     elif type(electrodogram) is np.ndarray:
         inputFileName = sourceFileName[sourceFileName.rfind('/')+1:sourceFileName.rfind('.wav')]
         validationFileName = inputFileName+'_validation.mat'
@@ -124,14 +122,20 @@ def validateOutputFunc(par,electrodogram,sourceFileName):
         assert electrodogram.shape[1] == 16, 'Electrodogram dimensions should be: 16 x numSamples, currently: '+f'{electrodogram.shape}'
         electrodogram = electrodogram.T
        
+        
+        
+    assert defaultData['elData'].shape[0] == electrodogram.shape[0],'Electrodogram shape does not match validation file. Expected: '+f"{defaultData['elData'].shape[0]}"+', found '+f'{electrodogram.shape[0]}'
+    assert defaultData['elData'].shape[1] == electrodogram.shape[1],'Electrodogram shape does not match validation file. Expected: '+f"{defaultData['elData'].shape[1]}"+', found '+f'{electrodogram.shape[1]}'
+    
+    eps = np.finfor(float).eps
+    unbalancedChannels = np.where(np.abs(np.sum(electrodogram,axis=1)) > eps)[0]
+    assert any(unbalancedChannels), 'Electrodogram appears not to be charge balanced. Channels '+f'{unbalancedChannels}'
+    
     # load validation data for comparison
     # inputFileName = par['parent']['wavFile']
     inputFileName = sourceFileName[sourceFileName.rfind('/')+1:sourceFileName.rfind('.wav')]
     validationFileName = inputFileName+'_validation.mat'
-    
-
-
-        
+            
     # calculate absolute differences between standard and test algorithm outputs
     outputDifference = np.sum(electrodogram-defaultData['elData'],axis=1).reshape(16,1)
     
