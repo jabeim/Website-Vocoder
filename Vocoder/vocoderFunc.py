@@ -6,7 +6,6 @@ Created on Mon Apr 22 11:29:54 2019
 """
 import time
 import numpy as np
-import scipy as sp
 import scipy.io
 import scipy.io.wavfile
 import scipy.interpolate
@@ -125,12 +124,9 @@ def vocoderFunc(electrodogram,**kwargs):
 
 
 #%% Scale and preprocess electrodogram data     
-    # scaletoMuA = 500/resistorValue
-    scaletoMuA = 1;
-#    electrodeAmp = electrodogram[:,1:] # the first column in the matrix is actually channel similarity.
-    electrodeAmp =electrodogram
-    nElec = electrodeAmp.shape[0]
-    elData = electrodeAmp*scaletoMuA
+
+    nElec = electrodogram.shape[0]
+    elData = electrodogram
     captTs = 1/captFs
   
 # compute electrode locations in terms of frequency 
