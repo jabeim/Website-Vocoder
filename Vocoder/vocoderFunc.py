@@ -5,6 +5,7 @@ Created on Mon Apr 22 11:29:54 2019
 @author: beimx004
 """
 import time
+from os.path import split, splitext
 import numpy as np
 import scipy.io
 import scipy.io.wavfile
@@ -40,7 +41,11 @@ def vocoderFunc(electrodogram,**kwargs):
         if type(electrodogram) is str:         
             # First load the validation file if it exists
             assert '_elGramOutput' in electrodogram, "Filename must contain the source audio filename followed by '_elGramOutput"
-            validationFileName = electrodogram[:electrodogram.rfind('_elGramOutput')]+'_validation.mat' # grab validation file name based on beginning of input file name   
+            
+            electrodogramFile = splitext(split(electrodogram)[1])[0]
+            
+            validationFileName = electrodogramFile[:electrodogramFile.rfind('_elGramOutput')]+'_validation.mat' # grab validation file name based on beginning of input file name   
+            print(validationFileName)
             
             try:
                 defaultData = scipy.io.loadmat('Validation/'+validationFileName)
@@ -63,6 +68,7 @@ def vocoderFunc(electrodogram,**kwargs):
                     else:
                         raise ValueError('HDF5 File contains multiple datasets. File should contain only the electrode pulse matrix.')
                     f.close()
+                    
             elif electrodogram[-4:] == '.mat':
                 rawData = scipy.io.loadmat(electrodogram)
                 if 'elData' in rawData.keys():                 
