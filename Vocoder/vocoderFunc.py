@@ -20,6 +20,7 @@ def vocoderFunc(electrodogram,**kwargs):
     audioFs = kwargs.get('audioFs',48000)
     saveOutput = kwargs.get('saveOutput',False)
     outputFile = kwargs.get('outputFile',None)
+    skipValidation = kwargs.get('skipValidation',False)
     
     # these parameters will be used by the website. DO NOT CHANGE FROM DEFAULT VALUES
     captFs = 55556
@@ -38,19 +39,21 @@ def vocoderFunc(electrodogram,**kwargs):
 
 #%% Process electrodogram and validate file parameters before proceeding to vocoder pipeline
     try:
-        if type(electrodogram) is str:         
-            # First load the validation file if it exists
-            assert '_elGramOutput' in electrodogram, "Filename must contain the source audio filename followed by '_elGramOutput"
-            
-            electrodogramFile = splitext(split(electrodogram)[1])[0]
-            
-            validationFileName = electrodogramFile[:electrodogramFile.rfind('_elGramOutput')]+'_validation.mat' # grab validation file name based on beginning of input file name   
-            print(validationFileName)
-            
-            try:
-                defaultData = scipy.io.loadmat('Validation/'+validationFileName)
-            except FileNotFoundError:
-                raise FileNotFoundError('Could not find validation file for '+electrodogram+'. Check your files to upload to ensure they begin with the source filename + _elGramOutput')
+        if type(electrodogram) is str:
+            if skipValidation is False:
+                # First load the validation file if it exists
+                assert '_elGramOutput' in electrodogram, "Filename must contain the source audio filename followed by '_elGramOutput"
+                
+                electrodogramFile = splitext(split(electrodogram)[1])[0]
+                
+                validationFileName = electrodogramFile[:electrodogramFile.rfind('_elGramOutput')]+'_validation.mat' # grab validation file name based on beginning of input file name   
+                print(validationFileName)
+                
+                try:
+                    defaultData = scipy.io.loadmat('Validation/'+validationFileName)
+                    defaultData = defaultData['elData'].A
+                except FileNotFoundError:
+                    raise FileNotFoundError('Could not find validation file for '+electrodogram+'. Check your files to upload to ensure they begin with the source filename + _elGramOutput')
             
             # Next check the filestring extension 
             if electrodogram[-3:] == '.h5':
@@ -111,7 +114,7 @@ def vocoderFunc(electrodogram,**kwargs):
             else:
                 raise ValueError('Invalid File format: Only .npy, scipy sparse .npz, .h5, or .mat files are allowed')
                 
-            
+            if skipValidation is False:
                 assert defaultData.shape[1]*0.99 <= electrodogram.shape[1] < defaultData.shape[1]*1.01, 'Electrodogram length should correspond to resampling source audio at 55556 Hz. Expected: '+f'{defaultData.shape[1]}'+' samples, found: '+f'{electrodogram.shape[1]}'+' samples'
                 
         elif type(electrodogram) is np.ndarray: 
