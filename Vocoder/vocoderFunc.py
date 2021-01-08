@@ -53,7 +53,7 @@ def vocoderFunc(electrodogram,**kwargs):
                     defaultData = scipy.io.loadmat('Validation/'+validationFileName)
                     defaultData = defaultData['elData'].A
                 except FileNotFoundError:
-                    raise FileNotFoundError('Could not find validation file for '+electrodogram+'. Check your files to upload to ensure they begin with the source filename + _elGramOutput')
+                    raise FileNotFoundError('Could not find validation file for: '+electrodogramFile+'. Check your files to upload to ensure they begin with the source filename + _elGramOutput')
             
             # Next check the filestring extension 
             if electrodogram[-3:] == '.h5':
@@ -116,7 +116,7 @@ def vocoderFunc(electrodogram,**kwargs):
                 
             if skipValidation is False:
                 assert defaultData.shape[1]*0.99 <= electrodogram.shape[1] < defaultData.shape[1]*1.01, 'Electrodogram length should correspond to resampling source audio at 55556 Hz. Expected: '+f'{defaultData.shape[1]}'+' samples, found: '+f'{electrodogram.shape[1]}'+' samples'
-                
+
         elif type(electrodogram) is np.ndarray: 
             if 16 in electrodogram.shape:
                 if electrodogram.shape[0] == 16:
