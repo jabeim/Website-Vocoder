@@ -125,7 +125,7 @@ def vocoderFunc(electrodogram,**kwargs):
         else:
             raise ValueError('Expected str or numpy ndarray inputs.')
     except Exception as Err:
-        return False,Err
+        return 1,Err
             
 
 
@@ -291,7 +291,7 @@ def vocoderFunc(electrodogram,**kwargs):
         amplitude = np.iinfo(np.int16).max
         audioToSave = audioOut*amplitude
         scipy.io.wavfile.write(outputFile+'.wav',audioFs.astype(int),np.int16(audioToSave)) 
-        return(True,outputFile+'.wav')
-    return(True,'no output saved')    
+        return(0,outputFile+'.wav')
+    return(0,'no output saved')    
 
     
